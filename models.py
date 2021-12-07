@@ -54,3 +54,10 @@ class FFLSTMClassifier(nn.Module):
         out = F.dropout(F.relu(feat), training=self.training)
         out = self.fc(out)
         return out
+
+if __name__ == "__main__":
+    input = torch.randn((16, 100, 256))
+    encoder = FFLSTMEncoder1( lstm_input_size= 256, lstm_hidden_size= 100, lstm_num_layers= 2, fc2_size = 256)
+    classifier = FFLSTMClassifier(fc2_size= 256, num_classes= 5)
+    output = classifier(encoder(input))
+    print(output.shape)

@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 
 import numpy as np
-from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.metrics import  confusion_matrix, accuracy_score
 
 import params
     
@@ -82,7 +82,7 @@ def train_single_domain_target(encoder, classifier,
     ####################
 
     loss_theta_curve = []
-    f1score_curve = []
+    accuracy_curve = []
     num_samp_test = len(labels_test)
     pred_mat = np.zeros((num_samp_test,params.tgt_num_epochs_pre))
     
@@ -112,17 +112,17 @@ def train_single_domain_target(encoder, classifier,
         loss_theta_curve.extend([loss_theta.item()])
 
         # eval model on test set  
-        f1score, pred = eval_single_domain(encoder, classifier, data_test, labels_test)        
-        f1score_curve.extend([f1score])
+        accuracy, pred = eval_single_domain(encoder, classifier, data_test, labels_test)        
+        accuracy_curve.extend([accuracy])
         pred_mat[:,epoch] = pred
     
-    f1score_final = max(f1score_curve)
-    f1score_final_ind = np.argmax(f1score_curve)
-    print('f1score='+str(int(f1score_final))+', iter='+str(np.argmax(f1score_curve)))
-    pred_final = pred_mat[:,f1score_final_ind]
+    accuracy_final = max(accuracy_curve)
+    accuracy_final_ind = np.argmax(accuracy_curve)
+    print('accuracy='+str(int(accuracy_final))+', iter='+str(np.argmax(accuracy_curve)))
+    pred_final = pred_mat[:,accuracy_final_ind]
     confusemat_final = confusion_matrix(labels_test,pred_final)
 
-    return encoder, classifier, f1score_final, confusemat_final
+    return encoder, classifier, accuracy_final, confusemat_final
     
 
 def eval_single_domain(encoder, classifier, data, labels):
@@ -148,6 +148,6 @@ def eval_single_domain(encoder, classifier, data, labels):
         acc_mat[cls_id] = \
         (np.expand_dims(pred_i,axis=1) == np.expand_dims(labels_i,axis=1)).sum()/len(labels_i)
 
-    f1score = f1_score(labels,pred,average='macro') * 100
+    accuracy = accuracy_score(labels,pred) * 100
     
-    return f1score, pred
+    return accuracy, pred

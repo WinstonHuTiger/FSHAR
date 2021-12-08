@@ -30,12 +30,14 @@ class FFLSTMEncoder1(nn.Module):
 
     def forward(self, x):
         """Forward the FFLSTM."""
+        x_device = x.get_device()
         h0 = Variable(torch.zeros(self.lstm_num_layers,
                                   x.size(0),
-                                  self.lstm_hidden_size)) 
+                                  self.lstm_hidden_size)).to(x_device)
         c0 = Variable(torch.zeros(self.lstm_num_layers,
                                   x.size(0),
-                                  self.lstm_hidden_size))
+                                  self.lstm_hidden_size)).to(x_device)
+
         r_out, (h_n, h_c) = self.lstm(x, (h0, c0))   
         out2 = self.fc2(r_out[:, -1, :])
         return out2
@@ -56,8 +58,11 @@ class FFLSTMClassifier(nn.Module):
         return out
 
 if __name__ == "__main__":
-    input = torch.randn((16, 100, 256))
+    input = torch.randn((2400, 100, 256)).cuda()
+    # print(input)
     encoder = FFLSTMEncoder1( lstm_input_size= 256, lstm_hidden_size= 100, lstm_num_layers= 2, fc2_size = 256)
     classifier = FFLSTMClassifier(fc2_size= 256, num_classes= 5)
+    encoder = encoder.cuda()
+    classifier = classifier.cuda()
     output = classifier(encoder(input))
     print(output.shape)

@@ -26,11 +26,20 @@ class FFLSTMEncoder1(nn.Module):
                             lstm_num_layers, 
                             batch_first=True)
 
-        self.fc2 = nn.Linear(lstm_hidden_size, fc2_size) 
+        self.fc2 = nn.Linear(lstm_hidden_size, fc2_size)
+        # self.h0 = torch.zeros(self.lstm_num_layers, lstm_input_size, self.lstm_hidden_size)
+        # self.c0 = torch.zeros(self.lstm_num_layers,
+        #                                  lstm_input_size,
+        #                                   self.lstm_hidden_size)
 
     def forward(self, x):
         """Forward the FFLSTM."""
-        x_device = x.get_device()
+        cuda_check = x.is_cuda
+        if cuda_check:
+            x_device = "cuda:" + str(x.get_device() )
+        else:
+            x_device = "cpu"
+        # print("x_device", x_device)
         h0 = Variable(torch.zeros(self.lstm_num_layers,
                                   x.size(0),
                                   self.lstm_hidden_size)).to(x_device)
@@ -38,7 +47,7 @@ class FFLSTMEncoder1(nn.Module):
                                   x.size(0),
                                   self.lstm_hidden_size)).to(x_device)
 
-        r_out, (h_n, h_c) = self.lstm(x, (h0, c0))   
+        r_out, (h_n, h_c) = self.lstm(x, (h0, c0))
         out2 = self.fc2(r_out[:, -1, :])
         return out2
 

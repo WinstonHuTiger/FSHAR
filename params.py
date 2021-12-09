@@ -7,11 +7,11 @@ src_model_trained = True
 tgt_model_trained = True
 
 # Parameter for encoder
-# opp
-lstm_num_layers_opp = 2
-lstm_hidden_size_opp = 64
-fc1_size_opp = 64
-fc2_size_opp = 64
+# ours
+lstm_num_layers_ours = 2
+lstm_hidden_size_ours = 128
+fc1_size_opp = 128
+fc2_size_ours = 128
 # pcmap2
 lstm_num_layers_pamap2 = 2
 lstm_hidden_size_pamap2 = 50
@@ -34,8 +34,8 @@ beta1 = 0.9
 beta2 = 0.999
 
 # Number of epochs
-src_num_epochs_pre = 500
-tgt_num_epochs_pre = 200
+src_num_epochs_pre = 200
+tgt_num_epochs_pre = 100
 num_epochs = 120
 src_num_epochs = 10
 

@@ -19,6 +19,8 @@ def train_single_domain_source(encoder, classifier,
     # 1. setup network #
     ####################
 
+
+
     # set train state for Dropout and BN layers
     encoder.train()
     classifier.train()
@@ -68,9 +70,9 @@ def train_single_domain_target(encoder, classifier,
     # 1. setup network #
     ####################
 
+
     # set train state for Dropout and BN layers
-    encoder.train()
-    classifier.train()
+
 
     # setup criterion and optimizer 
     params_to_train = list(encoder.parameters()) + list(classifier.parameters())
@@ -95,7 +97,8 @@ def train_single_domain_target(encoder, classifier,
     labels_test = Variable(labels_test)    
     
     for epoch in range(params.tgt_num_epochs_pre):
-        
+        encoder.train()
+        classifier.train()
        # zero gradients for optimizer
         optimizer.zero_grad()
 
@@ -109,7 +112,7 @@ def train_single_domain_target(encoder, classifier,
         optimizer.step()
         
         # Collect loss values
-        loss_theta_curve.extend([loss_theta.item()])
+        loss_theta_curve.extend([loss_theta.cpu().item()])
 
         # eval model on test set  
         accuracy, pred = eval_single_domain(encoder, classifier, data_test, labels_test)        
@@ -120,7 +123,7 @@ def train_single_domain_target(encoder, classifier,
     accuracy_final_ind = np.argmax(accuracy_curve)
     print('accuracy='+str(int(accuracy_final))+', iter='+str(np.argmax(accuracy_curve)))
     pred_final = pred_mat[:,accuracy_final_ind]
-    confusemat_final = confusion_matrix(labels_test,pred_final)
+    confusemat_final = confusion_matrix(labels_test.cpu().numpy(),pred_final)
 
     return encoder, classifier, accuracy_final, confusemat_final
     
@@ -136,9 +139,9 @@ def eval_single_domain(encoder, classifier, data, labels):
 
     outputs = classifier(encoder(data))
     
-    _, pred = torch.max(outputs.data, 1)
+    _, pred = torch.max(outputs.cpu().data, 1)
     
-    labels = np.squeeze(labels.numpy())
+    labels = np.squeeze(labels.cpu().numpy())
     num_class = len(np.unique(labels))
     acc_mat = np.zeros(num_class)
     for cls_id in range(num_class):

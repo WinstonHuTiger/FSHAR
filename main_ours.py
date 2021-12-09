@@ -8,7 +8,7 @@ from get_our_dataloader import get_our_datasets
 from models import FFLSTMEncoder1,FFLSTMClassifier
 from train_fs import train_single_domain_source,train_single_domain_target
 import params
-from utils import init_random_seed
+
 
 #init_random_seed(1)
 
@@ -54,9 +54,9 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                     # Construct encoder_init
                     encoder_init = \
                         FFLSTMEncoder1(lstm_input_size=NUM_DIM,
-                                       lstm_hidden_size=params.lstm_hidden_size_opp,
-                                       lstm_num_layers=params.lstm_num_layers_opp,
-                                       fc2_size=params.fc2_size_opp)
+                                       lstm_hidden_size=params.lstm_hidden_size_ours,
+                                       lstm_num_layers=params.lstm_num_layers_ours,
+                                       fc2_size=params.fc2_size_ours)
                     # Save encoder_init
                     torch.save(encoder_init, os.path.join(model_path, "encoder_init.pkl"))
                 # Initialize classifier_tgt_init
@@ -65,7 +65,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 if not os.path.exists(classifier_tgt_path):
                     # Construct classifier_tgt_init
                     classifier_tgt_init = \
-                        FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                        FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                          num_classes=TGT_NUM_CLASSES)
                     # Save classifier_tgt_init
                     torch.save(classifier_tgt_init,classifier_tgt_path)
@@ -74,7 +74,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 if not os.path.exists(os.path.join(model_path, "classifier_src_init.pkl")):
                     # Construct classifier_src_init
                     classifier_src_init = \
-                        FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                        FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                          num_classes=SRC_NUM_CLASSES)
                     # Save classifier_src_init
                     torch.save(classifier_src_init,os.path.join(model_path, "classifier_src_init.pkl"))
@@ -89,23 +89,36 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                     # Train encoder_src and classifier_src
                     encoder_init = torch.load(os.path.join(model_path,"encoder_init.pkl") )
                     classifier_src_init = torch.load(os.path.join(model_path,"classifier_src_init.pkl"))
+                    if torch.cuda.is_available():
+                        encoder_init.cuda()
+                        classifier_src_init.cuda()
+                        data_src = data_src.cuda()
+                        labels_src = labels_src.cuda()
                     encoder_src,classifier_src = \
                         train_single_domain_source(encoder_init,classifier_src_init,
                                                    data_src,labels_src,1e-3)
                     # Save encoder_src and classifier_src
-                    torch.save(encoder_src,os.path.join(model_path, "encoder_src_"+src_type+".pkl") )
-                    torch.save(classifier_src, os.path.join(model_path,"classifier_src_"+src_type+".pkl"))
+                    torch.save(encoder_src.cpu(),os.path.join(model_path, "encoder_src_"+src_type+".pkl") )
+                    torch.save(classifier_src.cpu(), os.path.join(model_path,"classifier_src_"+src_type+".pkl"))
 
 
                 # Parameter Transfer
                 print("=== Parameter Transfer ===")
-                accuracy_list = np.zeros((4))
-                confusemat_list = np.zeros((TGT_NUM_CLASSES,TGT_NUM_CLASSES,4))
+                accuracy_list = np.zeros((3))
+                confusemat_list = np.zeros((TGT_NUM_CLASSES,TGT_NUM_CLASSES,3))
                 # Target Only
                 print("=== Target Only ===")
                 # Train encoder_tgt and classifier_tgt
                 encoder_init = torch.load(os.path.join(model_path,"encoder_init.pkl" ))
                 classifier_tgt_init = torch.load(os.path.join(model_path,"classifier_tgt_init.pkl") )
+                if torch.cuda.is_available():
+                    encoder_init.cuda()
+                    classifier_tgt_init.cuda()
+                    data_train_tgt =  data_train_tgt.cuda()
+                    labels_train_tgt =  labels_train_tgt.cuda()
+                    data_test_tgt = data_test_tgt.cuda()
+                    labels_test_tgt = labels_test_tgt.cuda()
+
                 encoder_tgt,classifier_tgt,accuracy,confusemat = \
                     train_single_domain_target(encoder_init,classifier_tgt_init,
                                                data_train_tgt,labels_train_tgt,
@@ -130,11 +143,11 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 if not os.path.exists(our_path):
                     os.makedirs(our_path)
                 # Source feature extraction
-                encoder_src = torch.load(model_path+"encoder_src_"+src_type+".pkl")
-                feat_src = encoder_src(data_src).detach().numpy()
+                encoder_src = torch.load( os.path.join(model_path, "encoder_src_"+src_type+".pkl") )
+                feat_src = encoder_src(data_src.cpu()).detach().numpy()
                 print("Source features are with size "+str(feat_src.shape))
                 # Target feature extraction
-                feat_train_tgt = encoder_src(data_train_tgt).detach().numpy()
+                feat_train_tgt = encoder_src(data_train_tgt.cpu()).detach().numpy()
                 print("Target features are with size "+str(feat_train_tgt.shape))
                 if sim_type == "SR":
                     A,_,_ = \
@@ -153,6 +166,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                     f_ngd = h5py.File('sim_ngd_opp.h5')
                     AProbPrime = f_ngd.get('sim_ngd')[()]
                     print(AProbPrime.shape)
+                    print("NGD aprobprime", AProbPrime)
                 elif sim_type == "Cos":
                     feat_src_norm = np.zeros(feat_src.shape)
                     for i in range(feat_src.shape[0]):
@@ -190,7 +204,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 classifier_comb1_weight = np.matmul(np.transpose(AProbSoft),
                                                     classifier_src_weight)
                 classifier_comb1 = \
-                    FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                    FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                      num_classes=TGT_NUM_CLASSES)
                 classifier_comb1.fc.weight.data.copy_(torch.tensor(classifier_comb1_weight))
                 # Combination2
@@ -207,7 +221,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 classifier_comb2_weight = np.matmul(np.transpose(AProbHard),
                                                     classifier_src_weight)
                 classifier_comb2 = \
-                    FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                    FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                      num_classes=TGT_NUM_CLASSES)
                 classifier_comb2.fc.weight.data.copy_(torch.tensor(classifier_comb2_weight))
 
@@ -218,6 +232,9 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 print("=== Fine Tuning (Combined Classifier 1) ===")
                 encoder_src = torch.load(os.path.join(model_path, "encoder_src_"+src_type+".pkl"))
                 print("The size of source classifier is "+str(classifier_comb1.fc.weight.shape))
+                if torch.cuda.is_available():
+                    encoder_src.cuda()
+                    classifier_comb1.cuda()
                 encoder_tgt_comb1,classifier_tgt_comb1,accuracy_comb1,confusemat_comb1 = \
                     train_single_domain_target(encoder_src,classifier_comb1,
                                                data_train_tgt,labels_train_tgt,
@@ -227,8 +244,11 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
                 confusemat_list[:,:,1] = confusemat_comb1
                 # Initialize with encoder_src and classifier_comb2
                 print("=== Fine Tuning (Combined Classifier 2) ===")
-                encoder_src = torch.load(os.path.join(model_path+"encoder_src_"+src_type+".pkl"))
+                encoder_src = torch.load(os.path.join(model_path,"encoder_src_"+src_type+".pkl"))
                 print("The size of source classifier is "+str(classifier_comb2.fc.weight.shape))
+                if torch.cuda.is_available():
+                    encoder_src.cuda()
+                    classifier_comb2.cuda()
                 encoder_tgt_comb2,classifier_tgt_comb2,accuracy_comb2,confusemat_comb2 = \
                     train_single_domain_target(encoder_src,classifier_comb2,
                                                data_train_tgt,labels_train_tgt,

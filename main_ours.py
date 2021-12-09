@@ -20,13 +20,13 @@ def one_hot(labels,num_class):
     return labels_onehot
 
 def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
-                    k,lambda_l21=1e-2):
+                    k,target_env, action_list , lambda_l21=1e-2):
 
     TGT_NUM_SAMP_PER_CLASS = int(tgt_num_samp_per_class)
 
     # Dataset information
     SRC_NUM_CLASSES = 5
-    TGT_NUM_CLASSES = 8
+    TGT_NUM_CLASSES = len(action_list)
     NUM_DIM = 256
 
 
@@ -35,7 +35,7 @@ def main_env2env_fs(tgt_num_samp_per_class,src_type,sim_type,
 
     # Load data
     print("=== Data loading ===")
-    src_loader,tgt_loader_train,tgt_loader_test = get_our_datasets()
+    src_loader,tgt_loader_train,tgt_loader_test = get_our_datasets(target_env, tgt_num_samp_per_class, action_list)
 
     for data_src,labels_src in src_loader:
 

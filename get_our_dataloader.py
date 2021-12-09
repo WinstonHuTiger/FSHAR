@@ -21,7 +21,7 @@ class data_set(Dataset):
     def __init__(self, src_path=r"D:\dev_x\DataProc\output\111_200x100_dataset_std_halfed",
                  env="env1", mode="train",
                  action_list=['rip', 'run', 'sit', 'squat', 'walk'],
-                 transform=None):
+                 transform=None, shots=3):
         self.person_data_num = 15 * 2
         self.image_path = []
         self.label = []
@@ -32,7 +32,7 @@ class data_set(Dataset):
         self.std_ = envs[env][1]
         # act_list = os.listdir(self.src_path)
         self.src_path = os.path.join(src_path, env)
-        self.fine_tuning_train_num = 3
+        self.fine_tuning_train_num = shots
         np.random.seed(SEED)
 
         for act in action_list:
@@ -75,25 +75,29 @@ class data_set(Dataset):
         return len(self.image_path)
 
 
-def get_our_datasets():
+def get_our_datasets(target_env="env2", shots=3,
+                     test_action_list=['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip']):
     source_dataset = data_set(env="env1")
-    target_train_dataset = data_set(env="env2", mode="train",
-                                    action_list=['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip'])
-    target_test_dataset = data_set(env="env2", mode="test",
-                                   action_list=['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip'])
-    source_loader = DataLoader(source_dataset, batch_size= len(source_dataset), shuffle=True)
-    target_train_loader = DataLoader(target_train_dataset, batch_size= len(target_train_dataset),
+    target_train_dataset = data_set(env=target_env, mode="train",
+                                    action_list=test_action_list, shots=shots)
+    target_test_dataset = data_set(env=target_env, mode="test",
+                                   action_list=test_action_list, shots=shots)
+    source_loader = DataLoader(source_dataset, batch_size=len(source_dataset), shuffle=True)
+    target_train_loader = DataLoader(target_train_dataset, batch_size=len(target_train_dataset),
                                      shuffle=True)
     target_test_loader = DataLoader(target_test_dataset, shuffle=False,
-                                    batch_size= len(target_test_dataset))
+                                    batch_size=len(target_test_dataset))
 
     return source_loader, target_train_loader, target_test_loader
 
 
 if __name__ == "__main__":
     batch_size = 32
-    source_loader, target_train_loader, target_test_loader = get_our_datasets(batch_size)
-    for x, y in source_loader:
+    source_loader, target_train_loader, target_test_loader = get_our_datasets(target_env="env3", shots=5)
+    for x, y in target_train_loader:
+        print(x.shape)
+        print(y.shape)
+    for x, y in target_test_loader:
         print(x.shape)
         print(y.shape)
         # print(y)

@@ -80,9 +80,9 @@ def main_opp2opp_fs(tgt_num_samp_per_class,src_type,sim_type,
                     # Construct encoder_init
                     encoder_init = \
                     FFLSTMEncoder1(lstm_input_size=NUM_DIM,
-                                   lstm_hidden_size=params.lstm_hidden_size_opp,
-                                   lstm_num_layers=params.lstm_num_layers_opp,
-                                   fc2_size=params.fc2_size_opp)
+                                   lstm_hidden_size=params.lstm_hidden_size_ours,
+                                   lstm_num_layers=params.lstm_num_layers_ours,
+                                   fc2_size=params.fc2_size_ours)
                     # Save encoder_init
                     torch.save(encoder_init,model_path+"encoder_init.pkl")
                 # Initialize classifier_tgt_init
@@ -90,7 +90,7 @@ def main_opp2opp_fs(tgt_num_samp_per_class,src_type,sim_type,
                 if not os.path.exists(model_path+"classifier_tgt_init.pkl"):
                     # Construct classifier_tgt_init
                     classifier_tgt_init = \
-                    FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                    FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                      num_classes=TGT_NUM_CLASSES)
                     # Save classifier_tgt_init
                     torch.save(classifier_tgt_init,model_path+"classifier_tgt_init.pkl")
@@ -99,7 +99,7 @@ def main_opp2opp_fs(tgt_num_samp_per_class,src_type,sim_type,
                 if not os.path.exists(model_path+"classifier_src_init.pkl"):
                     # Construct classifier_src_init
                     classifier_src_init = \
-                    FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                    FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                      num_classes=SRC_NUM_CLASSES)
                     # Save classifier_src_init
                     torch.save(classifier_src_init,model_path+"classifier_src_init.pkl")
@@ -212,7 +212,7 @@ def main_opp2opp_fs(tgt_num_samp_per_class,src_type,sim_type,
                 classifier_comb1_weight = np.matmul(np.transpose(AProbSoft),
                                                     classifier_src_weight)
                 classifier_comb1 = \
-                FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                  num_classes=TGT_NUM_CLASSES)
                 classifier_comb1.fc.weight.data.copy_(torch.tensor(classifier_comb1_weight))
                 # Combination2
@@ -229,7 +229,7 @@ def main_opp2opp_fs(tgt_num_samp_per_class,src_type,sim_type,
                 classifier_comb2_weight = np.matmul(np.transpose(AProbHard),
                                                     classifier_src_weight)
                 classifier_comb2 = \
-                FFLSTMClassifier(fc2_size=params.fc2_size_opp,
+                FFLSTMClassifier(fc2_size=params.fc2_size_ours,
                                  num_classes=TGT_NUM_CLASSES)
                 classifier_comb2.fc.weight.data.copy_(torch.tensor(classifier_comb2_weight))            
      

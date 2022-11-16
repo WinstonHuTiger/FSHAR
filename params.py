@@ -34,8 +34,8 @@ beta1 = 0.9
 beta2 = 0.999
 
 # Number of epochs
-src_num_epochs_pre = 200
-tgt_num_epochs_pre = 100
+src_num_epochs_pre = 500
+tgt_num_epochs_pre = 200
 num_epochs = 120
 src_num_epochs = 10
 

@@ -18,7 +18,7 @@ SEED = 2021
 
 class data_set(Dataset):
     # For fine-tuning there are 3 or 12 samples used for each class
-    def __init__(self, src_path=r"D:\dev_x\DataProc\output\111_200x100_dataset_std_halfed",
+    def __init__(self, src_path=r"/data/sdb/qingqiao/stft_data/111_200x100_dataset_std_halfed",
                  env="env1", mode="train",
                  action_list=['rip', 'run', 'sit', 'squat', 'walk'],
                  transform=None, shots=3):
@@ -76,7 +76,9 @@ class data_set(Dataset):
 
 
 def get_our_datasets(target_env="env2", shots=3,
-                     test_action_list=['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip']):
+                    #  test_action_list=['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip']
+                     test_action_list=[ 'run', 'sit', 'squat', 'walk', 'rip']
+                     ):
     source_dataset = data_set(env="env1")
     target_train_dataset = data_set(env=target_env, mode="train",
                                     action_list=test_action_list, shots=shots)

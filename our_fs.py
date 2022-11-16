@@ -7,14 +7,16 @@ from main_ours import main_env2env_fs
 
 """ours"""
 
-tgt_num_samp_per_class_list = [3]
+tgt_num_samp_per_class_list = [ 3]
 K = 4
 num_exp = 3
 tgtsbj_list = [3, 5, 12]
 src_type_list = ["stft"]
 sim_type_list = ["SR", "Cos"]
 target_action_lists  = [['jm', 'run', 'sit', 'squat', 'walk', 'rip', 'throw', 'wip'],
-                        ['jm', 'throw', 'wip']]
+                        ['jm', 'throw', 'wip'],
+                        ['run', 'sit', 'squat', 'walk', 'rip']
+                        ]
 target_envs = ["env2", "env3", "env4"]
 
 # TGT_NUM_CLASSES = 8
